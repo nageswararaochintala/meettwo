@@ -99,9 +99,6 @@ public class User implements Serializable {
 
 	
 
-
-	
-
 /*	public List<SubAdminPermission> getSubAdminPermissions() {
 		return subAdminPermissions;
 	}
