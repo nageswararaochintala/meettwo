@@ -41,6 +41,9 @@ import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
 
+import com.meettwo.constants.MeetTwoConstants;
+import com.meettwo.spring.config.MeetTwoConfig;
+
 
 
 
@@ -65,14 +68,28 @@ public class OAuth2ServerConfiguration {
 
 		@Override
 		public void configure(HttpSecurity http) throws Exception {
-
+			
+			String admin = MeetTwoConfig.getInstance().getConfigValue(MeetTwoConstants.ADMIN);
+			String subAdmin = MeetTwoConfig.getInstance().getConfigValue(MeetTwoConstants.SUB_ADMIN);
+			String user = MeetTwoConfig.getInstance().getConfigValue(MeetTwoConstants.USER);
+            
+			String map ="MAP";
+			
+			String userManagement = "USERMANAGEMENT";
+			
 			http
 				.authorizeRequests()
 				
 				//user services access
 				.antMatchers("/user/checkSession/**").permitAll()
 				.antMatchers("/user/login/**").permitAll()
-				.antMatchers("/user/admin/login/**").permitAll()
+				.antMatchers("/user/registration/**").permitAll()
+				
+				.antMatchers("/user/subscribeService").hasRole(user)
+				
+				.antMatchers("/user/accessMap").hasRole(map)
+				
+				.antMatchers("/user/userManagement").hasRole(userManagement)
 				;   
 			// @formatter:on
 		}

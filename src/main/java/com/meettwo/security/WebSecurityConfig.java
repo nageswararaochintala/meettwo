@@ -36,9 +36,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		return super.authenticationManagerBean();
 	}
 	
-/*	 @Bean
-	 public SocialUserDetailsService socialUserDetailsService() {
-	        return new CustomSocialUserDetailsService(userDetailsService);
-	    }*/
 
 }

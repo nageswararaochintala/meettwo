@@ -48,7 +48,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 			throw new UsernameNotFoundException(String.format("User %s does not exist!", username));
 		}
 		
-		UserDetails userDetails = new MeetTwoUserDetails(user);
+		UserDetails userDetails = new MeetTwoUserDetails(user,userService.getSubscriptionPermissions(user.getUserId()));
 		
 		return userDetails;
 	}

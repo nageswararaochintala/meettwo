@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.meettwo.model.SubAdminPermission;
 import com.meettwo.model.User;
 import com.meettwo.model.UserRole;
 
@@ -18,17 +19,17 @@ import com.meettwo.model.UserRole;
 public class MeetTwoUserDetails extends User implements UserDetails {
 	
 	private static final long serialVersionUID = 1L;
-	//List<String> subscriptionPermissions;
-	public MeetTwoUserDetails(User user) {
+	List<String> subscriptionPermissions;
+	public MeetTwoUserDetails(User user,List<String> subscriptionPermissions) {
 		super(user);
-		//this.subscriptionPermissions=subscriptionPermissions;
+		this.subscriptionPermissions=subscriptionPermissions;
 	}
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		
 		final UserRole userRole = getUserRole();
-		//final List<SubAdminPermission> subAdminPermissions=getSubAdminPermissions();
+		final List<SubAdminPermission> subAdminPermissions=getSubAdminPermissions();
 		List<GrantedAuthority> roleAuthorities = new ArrayList<GrantedAuthority>();
 		if(userRole!=null){
 				
@@ -45,7 +46,7 @@ public class MeetTwoUserDetails extends User implements UserDetails {
 			};
 			roleAuthorities.add(grantedAuthority);
 			
-			/*if(subscriptionPermissions!=null && !subscriptionPermissions.isEmpty()){
+			if(subscriptionPermissions!=null && !subscriptionPermissions.isEmpty()){
 				for (String subscriptionPermission : subscriptionPermissions) {
 
 					grantedAuthority = new GrantedAuthority() {
@@ -61,9 +62,9 @@ public class MeetTwoUserDetails extends User implements UserDetails {
 					};
 					roleAuthorities.add(grantedAuthority);
 				}
-			}*/
+			}
 			
-		/*	if(subAdminPermissions!=null 
+			if(subAdminPermissions!=null 
 					&& !subAdminPermissions.isEmpty()){
 				for (SubAdminPermission adminPermission : subAdminPermissions) {
 
@@ -74,13 +75,13 @@ public class MeetTwoUserDetails extends User implements UserDetails {
 						@Override
 						public String getAuthority() {
 							
-							String privilege = adminPermission.getAdminServicePermission().getPermission();   
+							String privilege = adminPermission.getAdminPermissions().getPermission(); 
 							return privilege;
 						}
 					};
 					roleAuthorities.add(grantedAuthority);
 				}
-			}*/
+			}
 			
 		}
 		return roleAuthorities;
@@ -111,13 +112,13 @@ public class MeetTwoUserDetails extends User implements UserDetails {
 		return true;
 	}
 
-/*	public List<String> getSubscriptionPermissions() {
+	public List<String> getSubscriptionPermissions() {
 		return subscriptionPermissions;
 	}
 
 	public void setSubscriptionPermissions(List<String> subscriptionPermissions) {
 		this.subscriptionPermissions = subscriptionPermissions;
-	}*/
+	}
 
 
 	

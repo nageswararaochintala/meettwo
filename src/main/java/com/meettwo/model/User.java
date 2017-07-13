@@ -2,14 +2,19 @@ package com.meettwo.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 /**
  * @author Nageswara rao.ch
@@ -72,9 +77,9 @@ public class User implements Serializable {
 	@Column(name = "last_login")
 	private Date lastLogin;
 	
-	/*@OneToMany(mappedBy = "user",fetch=FetchType.EAGER)
+	@OneToMany(mappedBy = "user",fetch=FetchType.EAGER)
 	@JsonManagedReference
-	private List<SubAdminPermission > subAdminPermissions ;*/
+	private List<SubAdminPermission > subAdminPermissions ;
 	
 
 	public User() {
@@ -93,19 +98,18 @@ public class User implements Serializable {
 		this.isActive = user.isActive;
 		this.currentLogin = user.currentLogin;
 		this.lastLogin = user.lastLogin;
-		//this.subEmployerPermissions=user.subEmployerPermissions;
-		//this.subAdminPermissions=user.subAdminPermissions;
+		this.subAdminPermissions=user.subAdminPermissions;
 	}
 
 	
 
-/*	public List<SubAdminPermission> getSubAdminPermissions() {
+	public List<SubAdminPermission> getSubAdminPermissions() {
 		return subAdminPermissions;
 	}
 
 	public void setSubAdminPermissions(List<SubAdminPermission> subAdminPermissions) {
 		this.subAdminPermissions = subAdminPermissions;
-	}*/
+	}
 
 	public Date getCurrentLogin() {
 		return currentLogin;

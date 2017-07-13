@@ -24,6 +24,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.meettwo.model.User;
+import com.meettwo.model.UserProfile;
+import com.meettwo.model.UserSubscriptions;
 import com.meettwo.security.MeetTwoUserDetails;
 import com.meettwo.service.UserService;
 import com.meettwo.util.ServiceStatus;
@@ -241,8 +243,6 @@ public class UserController {
 				dbUser = userService.getUserByEmailId(user.getEmailId());
 				if (dbUser != null) {
 					
-					if( dbUser.getUserRoleId()!=4l && dbUser.getUserRoleId()!=6l){
-						
 						if (user.getEmailId().trim().equalsIgnoreCase(dbUser.getEmailId())
 								&& passwordEncoder.matches(user.getPassword().trim(), dbUser.getPassword())) {
 							Timestamp currentLogin=new Timestamp(System.currentTimeMillis());
@@ -261,12 +261,6 @@ public class UserController {
 							serviceStatus.setMessage("check email and password");
 							serviceStatus.setStatus("failure");
 						}
-						
-					}else {
-						serviceStatus.setMessage("user  not present ");
-						serviceStatus.setStatus("failure");
-					}
-					
 				
 					
 				} else {
@@ -286,7 +280,55 @@ public class UserController {
 		return serviceStatus;
 	}
 	
-
+	
+	@RequestMapping(value="/registration",method= RequestMethod.POST ,consumes = MediaType.APPLICATION_JSON_VALUE,produces = MediaType.APPLICATION_JSON_VALUE)
+	public ServiceStatus  userRegistration(@RequestBody UserProfile userprofile){
+		ServiceStatus serviceStatus = new ServiceStatus();
+		
+		userService.userRegistration(userprofile);
+		
+		serviceStatus.setMessage("user registered successfully");
+		serviceStatus.setStatus("success");
+		
+		return serviceStatus;
+	}
+	
+	@RequestMapping(value="/subscribeService",method= RequestMethod.POST ,consumes = MediaType.APPLICATION_JSON_VALUE,produces = MediaType.APPLICATION_JSON_VALUE)
+	public ServiceStatus  subscribeService(@RequestBody UserSubscriptions userSubscriptions){
+		ServiceStatus serviceStatus = new ServiceStatus();
+		
+		userService.subscribeService(userSubscriptions);
+		
+		serviceStatus.setMessage("user subscribed for service successfully");
+		serviceStatus.setStatus("success");
+		
+		return serviceStatus;
+	}
+	
+	@RequestMapping(value="/accessMap",method= RequestMethod.GET ,produces = MediaType.APPLICATION_JSON_VALUE)
+	public ServiceStatus  accessMap(){
+		ServiceStatus serviceStatus = new ServiceStatus();
+		
+		int result = userService.accessMap();
+		
+		serviceStatus.setMessage("accessed map successfully");
+		serviceStatus.setStatus("success");
+		serviceStatus.setResult(result);
+		return serviceStatus;
+	}
+	
+	@RequestMapping(value="/userManagement",method= RequestMethod.GET ,produces = MediaType.APPLICATION_JSON_VALUE)
+	public ServiceStatus  userManagement(){
+		ServiceStatus serviceStatus = new ServiceStatus();
+		
+		int result = userService.accessMap();
+		
+		serviceStatus.setMessage("getting all users successfully");
+		serviceStatus.setStatus("success");
+		serviceStatus.setResult(result);
+		return serviceStatus;
+	}
+	
 	private  String getFileExtension(String fileName) {
 	    
 	    if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
