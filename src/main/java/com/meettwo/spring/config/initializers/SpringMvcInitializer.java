@@ -10,6 +10,7 @@ import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatche
 import com.meettwo.security.OAuth2ServerConfiguration;
 import com.meettwo.security.WebSecurityConfig;
 import com.meettwo.spring.config.AppConfig;
+import com.meettwo.spring.config.RabbitMQConfig;
 
 /**
  * {@link SpringMvcInitializer} provides the convenient methods for mvc project
@@ -25,7 +26,7 @@ public class SpringMvcInitializer extends AbstractAnnotationConfigDispatcherServ
 	@Override
 	protected Class<?>[] getRootConfigClasses() {
 		// TODO Auto-generated method stub
-		return new Class[]{AppConfig.class,WebSecurityConfig.class,OAuth2ServerConfiguration.class};
+		return new Class[]{AppConfig.class,WebSecurityConfig.class,OAuth2ServerConfiguration.class,RabbitMQConfig.class};
 	}
 
 	@Override

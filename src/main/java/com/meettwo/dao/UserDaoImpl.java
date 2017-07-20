@@ -14,7 +14,6 @@ import org.hibernate.transform.Transformers;
 import org.springframework.stereotype.Repository;
 
 import com.meettwo.dto.UserDto;
-import com.meettwo.dto.UserSearch;
 import com.meettwo.dto.UserSearchDto;
 import com.meettwo.model.User;
 import com.meettwo.util.MeetTwoUtil;

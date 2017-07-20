@@ -5,7 +5,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
@@ -14,7 +16,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jboss.logging.Logger;
+import org.springframework.amqp.core.DirectExchange;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
@@ -33,6 +38,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
+import com.meettwo.dto.MeetTwoMail;
 import com.meettwo.model.User;
 import com.meettwo.model.UserProfile;
 import com.meettwo.model.UserSubscriptions;
@@ -58,6 +64,15 @@ public class UserController {
 	
 	@Autowired
 	PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	RabbitTemplate template;
+	
+	@Autowired 
+	DirectExchange direct;
+	
+	@Autowired
+	Environment environment;
 	
 	@Autowired
 	ConsumerTokenServices consumerTokenServices;
@@ -298,6 +313,21 @@ public class UserController {
 		ServiceStatus serviceStatus = new ServiceStatus();
 		
 		userService.userRegistration(userprofile);
+		List<MeetTwoMail> mails=new ArrayList<MeetTwoMail>();
+		MeetTwoMail mail =null;
+		mail=new MeetTwoMail();
+		mail.setTo(new String[]{userprofile.getUser().getEmailId()});
+		mail.setSubject("Welcome to MeetTwo ");
+		mail.setBody("HI ,\n "+userprofile.getFirstName()+"\n Your email is "
+				+ "Successfully registered"
+				+ "\n Your login mail & password \n"
+				+ " username :"+userprofile.getUser().getEmailId() 
+				+ " \n psssword :"+userprofile.getUser().getPassword()
+				+ " \n Note: this is your temporary(machine generated) password highly recommanded to reset the password after login "
+				+ "\n Thanks&Regards, \n "
+				+ " MeetTwo Team ");
+		mails.add(mail);
+		template.convertAndSend(direct.getName(), environment.getRequiredProperty("rabbitmq.mail.key"),mails);
 		
 		serviceStatus.setMessage("user registered successfully");
 		serviceStatus.setStatus("success");
