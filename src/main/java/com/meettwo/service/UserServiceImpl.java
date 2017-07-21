@@ -97,5 +97,10 @@ public class UserServiceImpl implements UserService {
 	public Map<String, Object> userSearch(UserSearchDto userSearchDto)throws ParseException {
 		return userDao.userSearch(userSearchDto);
 	}
+
+	@Override
+	public void deleteUser(String userId) {
+		userDao.deleteUser(userId);
+	}
 	
 }

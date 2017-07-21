@@ -205,5 +205,11 @@ public class UserDaoImpl extends AbstractDao implements UserDao {
 		return result;
 
 	}
+
+	@Override
+	public void deleteUser(String userId) {
+		Session session = getSession();
+        session.createQuery("update User set deletedYn=true where emailId=:userId").setParameter("userId", userId).executeUpdate();
+	}
 	
 }

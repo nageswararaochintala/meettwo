@@ -25,4 +25,6 @@ public interface UserService {
     Map<String, Object> getAllUser(Integer page,Integer size);
     
     Map<String,Object> userSearch(UserSearchDto userSearchDto)throws ParseException;
+    
+    void deleteUser(String userId);
 }

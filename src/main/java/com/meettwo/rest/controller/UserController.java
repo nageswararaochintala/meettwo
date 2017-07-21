@@ -15,6 +15,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.poi.hwpf.HWPFDocument;
+import org.apache.poi.hwpf.extractor.WordExtractor;
+import org.apache.poi.hwpf.usermodel.Range;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.docx4j.Docx4J;
+import org.docx4j.fonts.PhysicalFonts;
+import org.docx4j.model.fields.FieldUpdater;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.jboss.logging.Logger;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -38,12 +47,16 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfWriter;
 import com.meettwo.dto.MeetTwoMail;
 import com.meettwo.model.User;
 import com.meettwo.model.UserProfile;
 import com.meettwo.model.UserSubscriptions;
 import com.meettwo.security.MeetTwoUserDetails;
 import com.meettwo.service.UserService;
+import com.meettwo.util.MeetTwoUtil;
 import com.meettwo.util.ServiceStatus;
 
 /**
@@ -411,7 +424,7 @@ public class UserController {
 	
 	
 	 @RequestMapping(value="/downloadFile",method = RequestMethod.GET)
-	    public void downloadSeekerDocumentsById(HttpServletRequest request,
+	    public void downloadFile(HttpServletRequest request,
 	            HttpServletResponse response,@RequestParam("fileName") String fileName) throws IOException {
 		 ServletContext context = request.getServletContext();
 		 Boolean isTwoFile=fileName.contains("<>");
@@ -462,6 +475,221 @@ public class UserController {
 		} 
 		 
 	 }
+	 @RequestMapping(value="/deleteUsers",method=RequestMethod.POST,produces=MediaType.APPLICATION_JSON_VALUE,consumes=MediaType.APPLICATION_JSON_VALUE)
+		ServiceStatus deleteUsersByUserId(@RequestBody List<String> users){	
+			
+			ServiceStatus serviceStatus=new ServiceStatus();
+	   
+			template.convertAndSend(direct.getName(), environment.getRequiredProperty("rabbitmq.userDelete.key"),users);
+			
+			serviceStatus.setMessage("user deleted successfully");
+			serviceStatus.setStatus("success");
+			
+			return serviceStatus;
+			
+	 }
+	 
+	 @RequestMapping(value="/downloadPDFFile",method = RequestMethod.GET, produces="application/pdf")
+	    public void downloadPDFFile(HttpServletRequest request,
+	            HttpServletResponse response,@RequestParam("fileName") String filePath) throws IOException, Docx4JException {
+		 ServletContext context = request.getServletContext();
+
+		 if(filePath !=null){
+
+			 System.out.println(filePath);
+			 Boolean isTwoFile=filePath.contains("<>");
+         
+ 		File downloadFile = null;
+         String downloadFilePath="";       	
+     	if(isTwoFile){
+     	
+     		downloadFilePath=filePath.substring(filePath.lastIndexOf("<>")+2);
+     		if(!MeetTwoUtil.isEmptyString(downloadFilePath)){
+         		downloadFile =new File(downloadFilePath);
+     		}else {
+     			downloadFilePath=filePath.substring(0,filePath.indexOf("<>"));
+					downloadFile= new File(downloadFilePath);
+				}
+     		
+     	}else {
+     		downloadFilePath=filePath;
+     		downloadFile=new File(filePath);
+     		
+			}
+     
+     	
+        if(downloadFile.isFile()){
+     	   
+     	   FileInputStream inputStream = new FileInputStream(downloadFile);
+
+     	   
+            // get MIME type of the file
+            String mimeType = context.getMimeType(downloadFilePath);
+            
+            // get output stream of the response
+            OutputStream outStream = response.getOutputStream();
+            
+            
+            String ext=getFileExtensions(downloadFile);
+
+            if(!MeetTwoUtil.isEmptyString(ext)
+         		   && ext.equalsIgnoreCase("docx")){
+         	   
+         	// Font regex (optional)
+           		// Set regex if you want to restrict to some defined subset of fonts
+           		// Here we have to do this before calling createContent,
+           		// since that discovers fonts
+           		String regex = null;
+           		// Windows:
+           		// String
+           		// regex=".*(calibri|camb|cour|arial|symb|times|Times|zapf).*";
+           		//regex=".*(calibri|camb|cour|arial|times|comic|georgia|impact|LSANS|pala|tahoma|trebuc|verdana|symbol|webdings|wingding).*";
+           		// Mac
+           		// String
+           		// regex=".*(Courier New|Arial|Times New Roman|Comic Sans|Georgia|Impact|Lucida Console|Lucida Sans Unicode|Palatino Linotype|Tahoma|Trebuchet|Verdana|Symbol|Webdings|Wingdings|MS Sans Serif|MS Serif).*";
+           		PhysicalFonts.setRegex(regex);
+
+           		// Document loading (required)
+           		WordprocessingMLPackage wordMLPackage;
+           		
+           			// Load .docx or Flat OPC .xml
+           			System.out.println("Loading file from " + downloadFilePath);
+           			wordMLPackage = WordprocessingMLPackage.load(new java.io.File(downloadFilePath));
+           		
+           		
+           		// Refresh the values of DOCPROPERTY fields 
+           		FieldUpdater updater = new FieldUpdater(wordMLPackage);
+           		updater.update(true);
+
+           		
+           		
+           	  // set content attributes for the response
+           	  response.setHeader("X-Frame-Options", "SAMEORIGIN");
+                
+           	  response.setContentType("application/pdf");
+                /* response.setContentLength((int) downloadFile.length());*/
+          
+                 // set headers for the response
+                 String headerKey = "Content-Disposition";
+                 String headerValue = String.format("filename=\"%s\"",
+                         downloadFile.getName());
+                 response.setHeader(headerKey, headerValue);
+                  
+                  Docx4J.toPDF(wordMLPackage, outStream);
+                 
+                 
+           		 inputStream.close();
+                  outStream.close();
+           
+            }else if (!MeetTwoUtil.isEmptyString(ext) && ext.equalsIgnoreCase("doc")) {
+			
+         	   
+                FileInputStream in=new FileInputStream(downloadFile);
+               /* HWPFDocument document=new HWPFDocument(in);
+               
+                
+                PdfOptions options=null;
+                */
+                
+          		
+            	  // set content attributes for the response
+            	  response.setHeader("X-Frame-Options", "SAMEORIGIN");
+                 
+            	  response.setContentType("application/pdf");
+                 /* response.setContentLength((int) downloadFile.length());*/
+           
+                  // set headers for the response
+                  String headerKey = "Content-Disposition";
+                  String headerValue = String.format("filename=\"%s\"",
+                          downloadFile.getName());
+                  response.setHeader(headerKey, headerValue);
+                   
+                  /*PdfConverter.getInstance().convert(arg0, arg1, arg2);;
+                  PdfConverter.getInstance().convert(document, out, options);
+                  */
+                  
+                  POIFSFileSystem fs = null;  
+                  Document document = new Document();
+
+                   try {  
+                        
+                       fs = new POIFSFileSystem(in);  
+
+                       HWPFDocument doc = new HWPFDocument(fs);  
+                       WordExtractor we = new WordExtractor(doc);  
+
+                       
+
+                       PdfWriter writer = PdfWriter.getInstance(document, outStream);  
+
+                       Range range = doc.getRange();
+                       document.open();  
+                       writer.setPageEmpty(true);  
+                       document.newPage();  
+                       writer.setPageEmpty(true);  
+
+                       String[] paragraphs = we.getParagraphText();  
+                       for (int i = 0; i < paragraphs.length; i++) {  
+
+                           org.apache.poi.hwpf.usermodel.Paragraph pr = range.getParagraph(i);
+                          // CharacterRun run = pr.getCharacterRun(i);
+                          // run.setBold(true);
+                          // run.setCapitalized(true);
+                          // run.setItalic(true);
+                           paragraphs[i] = paragraphs[i].replaceAll("\\cM?\r?\n", "");  
+                       System.out.println("Length:" + paragraphs[i].length());  
+                       System.out.println("Paragraph" + i + ": " + paragraphs[i].toString());  
+
+                       // add the paragraph to the document  
+                       document.add(new Paragraph(paragraphs[i]));  
+                       }  
+
+                   } catch (Exception e) {  
+                       e.printStackTrace();  
+                   } finally {  
+                                   // close the document  
+                      document.close();  
+                               }  
+
+                  
+            		 inputStream.close();
+                   outStream.close(); 
+         	   
+         	   
+         	   
+			} else{
+         	   
+         	   if (mimeType == null) {
+                    // set to binary type if MIME mapping not found
+                    mimeType = "application/octet-stream";
+                }
+             
+                // set content attributes for the response
+                response.setContentType(mimeType);
+                response.setContentLength((int) downloadFile.length());
+         
+                // set headers for the response
+                response.setHeader("X-Frame-Options", "SAMEORIGIN");
+                String headerKey = "Content-Disposition";
+                String headerValue = String.format("filename=\"%s\"",
+                        downloadFile.getName());
+                response.setHeader(headerKey, headerValue);
+         
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int bytesRead = -1;
+         
+                // write bytes read from the input stream into the output stream
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outStream.write(buffer, 0, bytesRead);
+                }
+         
+            
+         	   
+            }
+        }        	
+	 
+		 }
+	 }
 	
 	private Boolean validateType(CommonsMultipartFile commonsMultipartFile) {
 		
@@ -482,6 +710,13 @@ public class UserController {
 		}
 		return flag;
 	}
+	
+	 private static String getFileExtensions(File file) {
+	        String fileName = file.getName();
+	        if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
+	        return fileName.substring(fileName.lastIndexOf(".")+1);
+	        else return "";
+	  }
 	
 	private  String getFileExtension(String fileName) {
 	    

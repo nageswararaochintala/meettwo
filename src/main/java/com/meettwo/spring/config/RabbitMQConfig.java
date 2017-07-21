@@ -31,6 +31,8 @@ public class RabbitMQConfig {
 	
 	final static String mailQueue = "mailing-queue";
 	
+	final static String userDeleteQueue = "deleteUser-queue";
+	
 	
 	@Bean
 	public ConnectionFactory connectionFactory() {
@@ -77,13 +79,28 @@ public class RabbitMQConfig {
 	}
 	
 	@Bean
+	public Queue userDeleteQueue() {
+		return new Queue(userDeleteQueue);
+	}
+	
+	@Bean
 	public Binding mailBinding(DirectExchange direct, Queue mailQueue) {
 		return BindingBuilder.bind(mailQueue).to(direct).with(environment.getRequiredProperty("rabbitmq.mail.key"));
 	}
 	
 	@Bean
+	public Binding deleteUserBinding(DirectExchange direct, Queue userDeleteQueue) {
+		return BindingBuilder.bind(userDeleteQueue).to(direct).with(environment.getRequiredProperty("rabbitmq.userDelete.key"));
+	}
+	
+	@Bean
 	MailReciever mailReciever() {
 		return new MailReciever();
+	}
+	
+	@Bean
+	UserDeleteReciever userDeleteReciever() {
+		return new UserDeleteReciever();
 	}
 	
 	@Bean
@@ -98,10 +115,28 @@ public class RabbitMQConfig {
 		return container;
 
 	}
+	
+	@Bean
+	SimpleMessageListenerContainer userDeleteContainer(ConnectionFactory connectionFactory,
+			MessageListenerAdapter userDeleteListenerAdapter) {
+		SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+		container.setConnectionFactory(connectionFactory);
+		container.setQueueNames(userDeleteQueue);
+		container.setMessageListener(userDeleteListenerAdapter);
+		container.setChannelTransacted(true);
+		container.setAcknowledgeMode(AcknowledgeMode.AUTO);
+		return container;
+
+	}
 
 	@Bean
 	MessageListenerAdapter mailListenerAdapter(MailReciever mailReciever, MessageConverter jsonMessageConverter) {
 		return new MessageListenerAdapter(mailReciever, jsonMessageConverter);
+	}
+	
+	@Bean
+	MessageListenerAdapter userDeleteListenerAdapter(UserDeleteReciever userDeleteReciever, MessageConverter jsonMessageConverter) {
+		return new MessageListenerAdapter(userDeleteReciever, jsonMessageConverter);
 	}
 	
 }
