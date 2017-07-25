@@ -33,6 +33,16 @@ public class UserDaoImpl extends AbstractDao implements UserDao {
 		.uniqueResult();
 		
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<UserDto> getUserByIds(List<Long> ids) {
+		
+		Session session=getSession();
+		return session.createQuery("select u.emailId as emailId,"
+				+"u.createdDate as createdDate,u.isActive as isActive from User u where u.deletedYn=false and u.userId in(:ids) ORDER BY FIELD(userId, :ids) ")
+				.setResultTransformer(Transformers.aliasToBean(UserDto.class)).setParameterList("ids",ids).list();
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override

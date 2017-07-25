@@ -8,6 +8,10 @@ public class UserDto {
     Date createdDate;
     Boolean isActive;
     
+    public UserDto(){
+    	
+    }
+    
 	public String getEmailId() {
 		return emailId;
 	}

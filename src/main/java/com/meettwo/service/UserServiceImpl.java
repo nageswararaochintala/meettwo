@@ -16,6 +16,7 @@ import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import com.meettwo.constants.MeetTwoConstants;
 import com.meettwo.dao.UserDao;
+import com.meettwo.dto.UserDto;
 import com.meettwo.dto.UserSearchDto;
 import com.meettwo.model.User;
 import com.meettwo.model.UserProfile;
@@ -101,6 +102,11 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public void deleteUser(String userId) {
 		userDao.deleteUser(userId);
+	}
+
+	@Override
+	public List<UserDto> getUserByIds(List<Long> ids) {
+		return userDao.getUserByIds(ids);
 	}
 	
 }

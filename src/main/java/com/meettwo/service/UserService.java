@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
+import com.meettwo.dto.UserDto;
 import com.meettwo.dto.UserSearchDto;
 import com.meettwo.model.User;
 import com.meettwo.model.UserProfile;
@@ -14,6 +15,7 @@ import com.meettwo.model.UserSubscriptions;
 
 public interface UserService {
 
+	List<UserDto> getUserByIds(List<Long> ids);
 	User getUserByEmailId(String emailId);
     void userRegistration(UserProfile userprofile);
     List<String> getSubscriptionPermissions(Long userId);

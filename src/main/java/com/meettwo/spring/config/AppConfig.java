@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.event.ContextStartedEvent;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -37,13 +38,17 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 @Configuration
 @EnableWebMvc
 @EnableAspectJAutoProxy
-//@EnableSpringDataWebSupport
+@EnableSpringDataWebSupport
 @PropertySource(value="file:///${MeetTwoConfigPath}")
 @EnableAsync
 @EnableScheduling
 @ComponentScan(basePackages = { "com.meettwo.dao", "com.meettwo.service", 
 		"com.meettwo.rest.controller", 
 		"com.meettwo.spring.aop",
+		"com.meettwo.solr.controller",
+		"com.meettwo.solr.service",
+		"com.meettwo.solr.model",
+		"com.meettwo.solr.repositories"
 })
 @Import({DataSourceConfig.class, HibernateConfiguration.class, EmailConfig.class})
 public class AppConfig extends WebMvcConfigurerAdapter implements ApplicationListener<ContextStartedEvent> {
